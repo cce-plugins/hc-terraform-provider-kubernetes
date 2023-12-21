@@ -15,12 +15,11 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	gversion "github.com/hashicorp/go-version"
-	"github.com/mitchellh/go-homedir"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/mitchellh/go-homedir"
 
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
@@ -354,13 +353,13 @@ func Provider() *schema.Provider {
 			// authentication
 			"kubernetes_token_request_v1": resourceKubernetesTokenRequestV1(),
 
-			//node
+			// node
 			"kubernetes_runtime_class_v1": resourceKubernetesRuntimeClassV1(),
 		},
 	}
 
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		return providerConfigure(ctx, d, p.TerraformVersion)
+		return ProviderConfigure(ctx, d, p.TerraformVersion)
 	}
 
 	return p
@@ -445,17 +444,25 @@ func (k kubeClientsets) DiscoveryClient() (discovery.DiscoveryInterface, error) 
 	return k.discoveryClient, nil
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+func (k kubeClientsets) GetConfig() *restclient.Config {
+	return k.config
+}
+
+func (k kubeClientsets) SetConfig(c *restclient.Config) {
+	k.config = c
+}
+
+func ProviderConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (kubeClientsets, diag.Diagnostics) {
 	// Config initialization
 	cfg, err := initializeConfiguration(d)
 	if err != nil {
-		return nil, diag.FromErr(err)
+		return kubeClientsets{}, diag.FromErr(err)
 	}
 	if cfg == nil {
 		// This is a TEMPORARY measure to work around https://github.com/hashicorp/terraform/issues/24055
 		// IMPORTANT: this will NOT enable a workaround of issue: https://github.com/hashicorp/terraform/issues/4149
 		// IMPORTANT: if the supplied configuration is incomplete or invalid
-		///IMPORTANT: provider operations will fail or attempt to connect to localhost endpoints
+		// /IMPORTANT: provider operations will fail or attempt to connect to localhost endpoints
 		cfg = &restclient.Config{}
 	}
 
