@@ -297,6 +297,9 @@ func flattenContainerVolumeMounts(in []v1.VolumeMount) []interface{} {
 		if v.SubPath != "" {
 			m["sub_path"] = v.SubPath
 		}
+		if v.SubPathExpr != "" {
+			m["sub_path_expr"] = v.SubPathExpr
+		}
 
 		m["mount_propagation"] = string(v1.MountPropagationNone)
 		if v.MountPropagation != nil {
