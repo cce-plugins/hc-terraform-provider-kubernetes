@@ -34,6 +34,8 @@ import (
 
 const defaultFieldManagerName = "Terraform"
 
+var kubeClusterVersion = ""
+
 func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -208,6 +210,12 @@ func Provider() *schema.Provider {
 				},
 				Optional:    true,
 				Description: "List of Kubernetes metadata labels to ignore across all resources handled by this provider for situations where external systems are managing certain resource labels. Each item is a regular expression.",
+			},
+			"cluster_version": {
+				Type:        schema.TypeString,
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("KUBE_CLUSTER_VERSION", ""),
+				Description: "The version of Kubernetes cluster.",
 			},
 		},
 
@@ -491,6 +499,9 @@ func ProviderConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		IgnoreAnnotations:   ignoreAnnotations,
 		IgnoreLabels:        ignoreLabels,
 	}
+	if v, ok := d.Get("cluster_version").(string); ok {
+		kubeClusterVersion = v
+	}
 	return m, diag.Diagnostics{}
 }
 
@@ -666,17 +677,16 @@ func useAdmissionregistrationV1beta1(conn *kubernetes.Clientset) (bool, error) {
 }
 
 func getServerVersion(connection *kubernetes.Clientset) (*gversion.Version, error) {
-	ver, _ := os.LookupEnv("KUBE_VERSION")
-
-	if ver == "AUTO" || ver == "" {
-		sv, err := connection.ServerVersion()
-		if err != nil {
-			return nil, err
-		}
-		ver = sv.String()
+	if kubeClusterVersion != "AUTO" && kubeClusterVersion != "" {
+		return gversion.NewVersion(kubeClusterVersion)
 	}
 
-	return gversion.NewVersion(ver)
+	sv, err := connection.ServerVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	return gversion.NewVersion(sv.String())
 }
 
 func serverVersionGreaterThanOrEqual(connection *kubernetes.Clientset, version string) (bool, error) {
