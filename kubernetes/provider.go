@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/go-homedir"
-
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -667,12 +666,17 @@ func useAdmissionregistrationV1beta1(conn *kubernetes.Clientset) (bool, error) {
 }
 
 func getServerVersion(connection *kubernetes.Clientset) (*gversion.Version, error) {
-	sv, err := connection.ServerVersion()
-	if err != nil {
-		return nil, err
+	ver, _ := os.LookupEnv("KUBE_VERSION")
+
+	if ver == "AUTO" || ver == "" {
+		sv, err := connection.ServerVersion()
+		if err != nil {
+			return nil, err
+		}
+		ver = sv.String()
 	}
 
-	return gversion.NewVersion(sv.String())
+	return gversion.NewVersion(ver)
 }
 
 func serverVersionGreaterThanOrEqual(connection *kubernetes.Clientset, version string) (bool, error) {
