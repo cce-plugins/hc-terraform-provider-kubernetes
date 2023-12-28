@@ -213,8 +213,7 @@ func Provider() *schema.Provider {
 			},
 			"cluster_version": {
 				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("KUBE_CLUSTER_VERSION", ""),
+				Optional:    true,
 				Description: "The version of Kubernetes cluster.",
 			},
 		},
