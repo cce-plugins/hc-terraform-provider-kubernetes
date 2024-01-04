@@ -720,10 +720,6 @@ func volumeSchema(isUpdatable bool) *schema.Resource {
 					Optional:    true,
 					Default:     "",
 					ForceNew:    !isUpdatable,
-					ValidateFunc: validation.StringInSlice([]string{
-						string(corev1.StorageMediumDefault),
-						string(corev1.StorageMediumMemory),
-					}, false),
 				},
 				"size_limit": {
 					Type:             schema.TypeString,
