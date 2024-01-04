@@ -252,7 +252,6 @@ func volumeMountFields() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Description:  "Mount propagation mode. mount_propagation determines how mounts are propagated from the host to container and the other way around. Valid values are None (default), HostToContainer and Bidirectional.",
 			Optional:     true,
-			Default:      "None",
 			ValidateFunc: validation.StringInSlice([]string{"None", "HostToContainer", "Bidirectional"}, false),
 		},
 	}

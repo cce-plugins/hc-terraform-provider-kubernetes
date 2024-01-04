@@ -795,8 +795,10 @@ func expandContainerVolumeMounts(in []interface{}) []v1.VolumeMount {
 			vmp[i].SubPath = subPath.(string)
 		}
 		if mountPropagation, ok := p["mount_propagation"]; ok {
-			mp := v1.MountPropagationMode(mountPropagation.(string))
-			vmp[i].MountPropagation = &mp
+			if val, _ := mountPropagation.(string); val != "" {
+				mp := v1.MountPropagationMode(val)
+				vmp[i].MountPropagation = &mp
+			}
 		}
 	}
 	return vmp
